@@ -1,9 +1,10 @@
+from pytmx.util_pygame import load_pygame
+from random import randint
+
 from settings import *
 from player import Player
 from sprites import *
-from pytmx.util_pygame import load_pygame
-
-from random import randint
+from groups import AllSprites
 
 class Game():
     def __init__(self):
@@ -16,13 +17,10 @@ class Game():
         self.running = True
 
         # groups
-        self.all_sprites = pygame.sprite.Group()
+        self.all_sprites = AllSprites()
         self.collision_sprites = pygame.sprite.Group()
 
         self.setup()
-
-        # sprites
-        self.player = Player(self.all_sprites, self.collision_sprites, (WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2))
 
     def setup(self):
         map = load_pygame(join("data", "maps", "world.tmx"))
@@ -30,13 +28,15 @@ class Game():
         for x, y, image in map.get_layer_by_name("Ground").tiles():
             Sprite((self.all_sprites), image, (x * TILE_SIZE, y * TILE_SIZE))
 
-        for object in map.get_layer_by_name("Objects"):
-            CollisionSprite((self.all_sprites, self.collision_sprites), object.image, (object.x, object.y))
-
         for object in map.get_layer_by_name("Collisions"):
             CollisionSprite((self.collision_sprites), pygame.Surface((object.width, object.height)), (object.x, object.y))
 
-        
+        for object in map.get_layer_by_name("Objects"):
+            CollisionSprite((self.all_sprites, self.collision_sprites), object.image, (object.x, object.y))
+
+        for marker in map.get_layer_by_name("Entities"):
+            if marker.name == "Player":
+                self.player = Player(self.all_sprites, self.collision_sprites, (marker.x, marker.y))
 
     def run(self):
         while self.running:
@@ -51,7 +51,7 @@ class Game():
 
             # draw
             self.display_surface.fill("black")
-            self.all_sprites.draw(self.display_surface)
+            self.all_sprites.draw(self.player.rect.center)
 
             pygame.display.update()
 

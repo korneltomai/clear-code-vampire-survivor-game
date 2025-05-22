@@ -5,7 +5,7 @@ class Player(pygame.sprite.Sprite):
         super().__init__(groups)
         self.image = pygame.image.load(join("images", "player", "down", "0.png")).convert_alpha()
         self.rect = self.image.get_frect(center = pos)
-        self.hit_box_rect = self.rect.inflate(-50, 0)
+        self.hit_box_rect = self.rect.inflate(-48, -48)
 
         # movement
         self.direction = pygame.math.Vector2()
@@ -15,6 +15,9 @@ class Player(pygame.sprite.Sprite):
     def update(self, delta_time):
         self.input()
         self.move(delta_time)
+
+        print(self.rect.center)
+        print(self.hit_box_rect.center)
 
     def input(self):
         keys = pygame.key.get_pressed()
