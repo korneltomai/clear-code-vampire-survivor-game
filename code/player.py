@@ -19,6 +19,7 @@ class Player(pygame.sprite.Sprite):
 
     def load_images(self):
         self.frames = {"left": [], "right": [], "up": [], "down": []}
+
         for state in self.frames.keys():
             for folder_path, subfolders, file_names in walk(join("images", "player", state)):
                 if file_names:
@@ -27,6 +28,13 @@ class Player(pygame.sprite.Sprite):
                         surface = pygame.image.load(full_path).convert_alpha()
                         self.frames[state].append(surface)
 
+        self.frames["standing"] = {
+            "left": pygame.image.load(join("images", "player", "standing", "left.png")).convert_alpha(), 
+            "right": pygame.image.load(join("images", "player", "standing", "right.png")).convert_alpha(), 
+            "up": pygame.image.load(join("images", "player", "standing", "up.png")).convert_alpha(), 
+            "down": pygame.image.load(join("images", "player", "standing", "down.png")).convert_alpha()
+        }
+
     def animate(self, delta_time):
         if self.direction.x != 0:
             self.state = "right" if self.direction.x > 0 else "left"
@@ -34,7 +42,7 @@ class Player(pygame.sprite.Sprite):
             self.state = "down" if self.direction.y > 0 else "up"
 
         self.frame_index = self.frame_index + 5 * delta_time if self.direction else 0
-        self.image = self.frames[self.state][int(self.frame_index) % len(self.frames[self.state])]
+        self.image = self.frames[self.state][int(self.frame_index) % len(self.frames[self.state])] if self.direction else self.frames["standing"][self.state]
 
     def update(self, delta_time):
         self.input()
