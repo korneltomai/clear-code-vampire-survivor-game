@@ -19,6 +19,7 @@ class Game():
         self.all_sprites = AllSprites()
         self.collision_sprites = pygame.sprite.Group()
         self.bullet_sprites = pygame.sprite.Group()
+        self.enemy_sprites = pygame.sprite.Group()
 
         # enemy spawning
         self.enemy_types = ["bat", "blob", "skeleton"]
@@ -27,6 +28,11 @@ class Game():
         self.enemy_spawn_cooldown = 2000
         self.enemy_timer = pygame.event.custom_type()
         pygame.time.set_timer(self.enemy_timer, self.enemy_spawn_cooldown)
+
+        # audio
+        self.music = pygame.mixer.Sound(join("audio", "music.wav"))
+        self.music.set_volume(0.2)
+        self.music.play(-1)
         
         self.load_images()
         self.setup()
@@ -74,6 +80,7 @@ class Game():
             # update
             self.handle_input()
             self.all_sprites.update(delta_time)
+            self.check_for_gameover()
 
             # draw
             self.display_surface.fill("black")
@@ -85,18 +92,22 @@ class Game():
 
     def handle_input(self):
         if pygame.mouse.get_pressed()[0]:
-            self.gun.shoot((self.all_sprites, self.bullet_sprites))
+            self.gun.shoot((self.all_sprites, self.bullet_sprites), self.enemy_sprites)
 
     def spawn_enemy(self):
         random_enemy_type = choice(self.enemy_types)
         random_enemy_spawn_position = choice(self.enemy_spawn_positions)
 
         if random_enemy_type == "bat":
-            Bat((self.all_sprites), self.enemy_frames[random_enemy_type], self.collision_sprites, random_enemy_spawn_position, self.player)
+            Bat((self.all_sprites, self.enemy_sprites), self.enemy_frames[random_enemy_type], self.collision_sprites, random_enemy_spawn_position, self.player)
         elif random_enemy_type == "blob":
-            Blob((self.all_sprites), self.enemy_frames[random_enemy_type], self.collision_sprites, random_enemy_spawn_position, self.player)
+            Blob((self.all_sprites, self.enemy_sprites), self.enemy_frames[random_enemy_type], self.collision_sprites, random_enemy_spawn_position, self.player)
         elif random_enemy_type == "skeleton":
-            Skeleton((self.all_sprites), self.enemy_frames[random_enemy_type], self.collision_sprites, random_enemy_spawn_position, self.player)
+            Skeleton((self.all_sprites, self.enemy_sprites), self.enemy_frames[random_enemy_type], self.collision_sprites, random_enemy_spawn_position, self.player)
+
+    def check_for_gameover(self):
+        if pygame.sprite.spritecollide(self.player, self.enemy_sprites, False, pygame.sprite.collide_mask):
+            self.running = False
 
 if __name__ == "__main__":
     game = Game()

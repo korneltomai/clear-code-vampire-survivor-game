@@ -27,6 +27,12 @@ class Gun(pygame.sprite.Sprite):
         self.image = self.original_surface
         self.rect = self.image.get_frect(center = self.player.rect.center + self.player_direction * self.distance)
 
+        #audio
+        self.shoot_sound = pygame.mixer.Sound(join("audio", "shoot.wav"))
+        self.shoot_sound.set_volume(0.4)
+        self.impact_sound = pygame.mixer.Sound(join("audio", "impact.ogg"))
+        self.impact_sound.set_volume(0.6)
+
         self.bullet_surface = pygame.image.load(join("images", "gun", "bullet.png")).convert_alpha()
         self.can_shoot = True
         self.shoot_time = 0
@@ -52,13 +58,14 @@ class Gun(pygame.sprite.Sprite):
             self.image = pygame.transform.rotozoom(self.original_surface, -(angle), 1)
             self.image = pygame.transform.flip(self.image, False, True)
 
-    def shoot(self, bullet_groups):
+    def shoot(self, bullet_groups, enemy_sprites):
         if self.can_shoot:
             self.can_shoot = False
             self.shoot_time = pygame.time.get_ticks() 
 
             pos = self.rect.center + self.player_direction * 50
-            Bullet(bullet_groups, self.bullet_surface, pos, self.player_direction)
+            Bullet(bullet_groups, enemy_sprites, self.bullet_surface, pos, self.player_direction, self.impact_sound)
+            self.shoot_sound.play()
 
     def update_cooldown(self):
         if not self.can_shoot:
@@ -67,7 +74,7 @@ class Gun(pygame.sprite.Sprite):
                 self.can_shoot = True
 
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self, groups, surf, pos, direction):
+    def __init__(self, groups, enemy_sprites, surf, pos, direction, impact_sound):
         super().__init__(groups)
         self.image = surf
         self.rect = self.image.get_frect(center = pos)
@@ -75,11 +82,23 @@ class Bullet(pygame.sprite.Sprite):
         self.speed = 1000
         self.spawn_time = pygame.time.get_ticks()
         self.lifetime = 1000
+        self.enemy_sprites = enemy_sprites
+        self.impact_sound = impact_sound
 
     def update(self, delta_time):
         self.rect.center += self.direction * self.speed * delta_time
         if pygame.time.get_ticks() - self.spawn_time >= self.lifetime:
             self.kill()
+
+        collision_enemies = pygame.sprite.spritecollide(self, self.enemy_sprites, False, pygame.sprite.collide_mask)
+        if collision_enemies:
+            for enemy in collision_enemies:
+                if enemy.death_time == 0:
+                    enemy.destroy()
+                    self.kill()
+                    self.impact_sound.play()
+                    
+                
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, groups, frames, collision_sprites, pos, player, speed):
@@ -99,9 +118,15 @@ class Enemy(pygame.sprite.Sprite):
 
         self.player = player
 
+        self.death_time = 0
+        self.death_duration = 400
+
     def update(self, delta_time):
-        self.move(delta_time)
-        self.animate(delta_time)
+        if self.death_time == 0:
+            self.move(delta_time)
+            self.animate(delta_time)
+        else:
+            self.update_death_timer()
 
     def animate(self, delta_time):
         self.frame_index = self.frame_index + 5 * delta_time if self.direction else 0
@@ -134,9 +159,20 @@ class Enemy(pygame.sprite.Sprite):
                     if self.direction.y < 0:
                         self.hitbox_rect.top = sprite.rect.bottom
 
+    def destroy(self):
+        self.death_time = pygame.time.get_ticks()
+
+        surface = pygame.mask.from_surface(self.frames[0]).to_surface()
+        surface.set_colorkey("black")
+        self.image = surface
+
+    def update_death_timer(self):
+        if pygame.time.get_ticks() - self.death_time >= self.death_duration:
+            self.kill()
+
 class Bat(Enemy):
     def __init__(self, groups, surfaces, collision_sprites, pos, player):
-        super().__init__(groups, surfaces, collision_sprites, pos, player, 400)
+        super().__init__(groups, surfaces, collision_sprites, pos, player, 350)
 
 class Blob(Enemy):
     def __init__(self, groups, surfaces, collision_sprites, pos, player):
