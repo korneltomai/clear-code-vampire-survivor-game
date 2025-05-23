@@ -5,7 +5,7 @@ class Player(pygame.sprite.Sprite):
         super().__init__(groups)
         self.image = pygame.image.load(join("images", "player", "down", "0.png")).convert_alpha()
         self.rect = self.image.get_frect(center = pos)
-        self.hit_box_rect = self.rect.inflate(-48, -48)
+        self.hitbox_rect = self.rect.inflate(-48, -48)
 
         # movement
         self.direction = pygame.math.Vector2()
@@ -35,6 +35,11 @@ class Player(pygame.sprite.Sprite):
             "down": pygame.image.load(join("images", "player", "standing", "down.png")).convert_alpha()
         }
 
+    def update(self, delta_time):
+        self.handle_input()
+        self.move(delta_time)
+        self.animate(delta_time)
+
     def animate(self, delta_time):
         if self.direction.x != 0:
             self.state = "right" if self.direction.x > 0 else "left"
@@ -44,11 +49,6 @@ class Player(pygame.sprite.Sprite):
         self.frame_index = self.frame_index + 5 * delta_time if self.direction else 0
         self.image = self.frames[self.state][int(self.frame_index) % len(self.frames[self.state])] if self.direction else self.frames["standing"][self.state]
 
-    def update(self, delta_time):
-        self.handle_input()
-        self.move(delta_time)
-        self.animate(delta_time)
-
     def handle_input(self):
         keys = pygame.key.get_pressed()
         self.direction.x = int(keys[pygame.K_RIGHT] or keys[pygame.K_d]) - int(keys[pygame.K_LEFT] or keys[pygame.K_a])
@@ -56,22 +56,22 @@ class Player(pygame.sprite.Sprite):
         self.direction = self.direction.normalize() if self.direction else self.direction
 
     def move(self, delta_time):
-        self.hit_box_rect.x += self.direction.x * self.speed * delta_time
+        self.hitbox_rect.x += self.direction.x * self.speed * delta_time
         self.collision(True)
-        self.hit_box_rect.y += self.direction.y * self.speed * delta_time
+        self.hitbox_rect.y += self.direction.y * self.speed * delta_time
         self.collision(False)
-        self.rect.center = self.hit_box_rect.center
+        self.rect.center = self.hitbox_rect.center
 
     def collision(self, moving_horizontally):
         for sprite in self.collision_sprites:
-            if sprite.rect.colliderect(self.hit_box_rect):
+            if sprite.rect.colliderect(self.hitbox_rect):
                 if moving_horizontally:
                     if self.direction.x > 0:
-                        self.hit_box_rect.right = sprite.rect.left
+                        self.hitbox_rect.right = sprite.rect.left
                     if self.direction.x < 0:
-                        self.hit_box_rect.left = sprite.rect.right
+                        self.hitbox_rect.left = sprite.rect.right
                 else:
                     if self.direction.y > 0:
-                        self.hit_box_rect.bottom = sprite.rect.top
+                        self.hitbox_rect.bottom = sprite.rect.top
                     if self.direction.y < 0:
-                        self.hit_box_rect.top = sprite.rect.bottom
+                        self.hitbox_rect.top = sprite.rect.bottom

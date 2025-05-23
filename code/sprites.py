@@ -80,3 +80,68 @@ class Bullet(pygame.sprite.Sprite):
         self.rect.center += self.direction * self.speed * delta_time
         if pygame.time.get_ticks() - self.spawn_time >= self.lifetime:
             self.kill()
+
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self, groups, frames, collision_sprites, pos, player, speed):
+        super().__init__(groups)
+        self.image = frames[0]
+        self.rect = self.image.get_frect(center = pos)
+        self.hitbox_rect = self.rect.inflate(-60, -40)
+
+        # movement
+        self.direction = pygame.Vector2()
+        self.speed = speed
+        self.collision_sprites = collision_sprites
+
+        # animation
+        self.frames = frames
+        self.frame_index = 0
+
+        self.player = player
+
+    def update(self, delta_time):
+        self.move(delta_time)
+        self.animate(delta_time)
+
+    def animate(self, delta_time):
+        self.frame_index = self.frame_index + 5 * delta_time if self.direction else 0
+        self.image = self.frames[int(self.frame_index) % len(self.frames)]
+
+    def move(self, delta_time):
+        player_position = pygame.Vector2(self.player.rect.center)
+        position = pygame.Vector2(self.rect.center)
+        self.direction = (player_position - position).normalize()
+
+        self.hitbox_rect.x += self.direction.x * self.speed * delta_time
+        self.collision(True)
+        self.hitbox_rect.y += self.direction.y * self.speed * delta_time
+        self.collision(False)
+
+        self.rect.center = self.hitbox_rect.center
+
+
+    def collision(self, moving_horizontally):
+        for sprite in self.collision_sprites:
+            if sprite.rect.colliderect(self.hitbox_rect):
+                if moving_horizontally:
+                    if self.direction.x > 0:
+                        self.hitbox_rect.right = sprite.rect.left
+                    if self.direction.x < 0:
+                        self.hitbox_rect.left = sprite.rect.right
+                else:
+                    if self.direction.y > 0:
+                        self.hitbox_rect.bottom = sprite.rect.top
+                    if self.direction.y < 0:
+                        self.hitbox_rect.top = sprite.rect.bottom
+
+class Bat(Enemy):
+    def __init__(self, groups, surfaces, collision_sprites, pos, player):
+        super().__init__(groups, surfaces, collision_sprites, pos, player, 400)
+
+class Blob(Enemy):
+    def __init__(self, groups, surfaces, collision_sprites, pos, player):
+        super().__init__(groups, surfaces, collision_sprites, pos, player, 200)
+
+class Skeleton(Enemy):
+    def __init__(self, groups, surfaces, collision_sprites, pos, player):
+        super().__init__(groups, surfaces, collision_sprites, pos, player, 300)
