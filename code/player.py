@@ -45,14 +45,14 @@ class Player(pygame.sprite.Sprite):
         self.image = self.frames[self.state][int(self.frame_index) % len(self.frames[self.state])] if self.direction else self.frames["standing"][self.state]
 
     def update(self, delta_time):
-        self.input()
+        self.handle_input()
         self.move(delta_time)
         self.animate(delta_time)
 
-    def input(self):
+    def handle_input(self):
         keys = pygame.key.get_pressed()
-        self.direction.x = keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]
-        self.direction.y = keys[pygame.K_DOWN] - keys[pygame.K_UP]
+        self.direction.x = int(keys[pygame.K_RIGHT] or keys[pygame.K_d]) - int(keys[pygame.K_LEFT] or keys[pygame.K_a])
+        self.direction.y = int(keys[pygame.K_DOWN] or keys[pygame.K_s]) - int(keys[pygame.K_UP] or keys[pygame.K_w])
         self.direction = self.direction.normalize() if self.direction else self.direction
 
     def move(self, delta_time):

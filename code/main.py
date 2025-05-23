@@ -8,7 +8,6 @@ from groups import AllSprites
 
 class Game():
     def __init__(self):
-    
         # basic setup
         pygame.init()
         self.display_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -16,11 +15,18 @@ class Game():
         self.clock = pygame.time.Clock()
         self.running = True
 
+        # 
+
         # groups
         self.all_sprites = AllSprites()
         self.collision_sprites = pygame.sprite.Group()
+        self.bullet_sprites = pygame.sprite.Group()
 
+        self.load_images()
         self.setup()
+
+    def load_images(self):
+        pass
 
     def setup(self):
         map = load_pygame(join("data", "maps", "world.tmx"))
@@ -37,6 +43,7 @@ class Game():
         for marker in map.get_layer_by_name("Entities"):
             if marker.name == "Player":
                 self.player = Player(self.all_sprites, self.collision_sprites, (marker.x, marker.y))
+                self.gun = Gun(self.all_sprites, self.player)
 
     def run(self):
         while self.running:
@@ -47,6 +54,7 @@ class Game():
                     self.running = False
 
             # update
+            self.handle_input()
             self.all_sprites.update(delta_time)
 
             # draw
@@ -56,6 +64,10 @@ class Game():
             pygame.display.update()
 
         pygame.quit()
+
+    def handle_input(self):
+        if pygame.mouse.get_pressed()[0]:
+            self.gun.shoot((self.all_sprites, self.bullet_sprites))
 
 if __name__ == "__main__":
     game = Game()
