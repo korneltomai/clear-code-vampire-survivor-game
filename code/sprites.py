@@ -96,16 +96,16 @@ class Bullet(pygame.sprite.Sprite):
                 if enemy.death_time == 0:
                     enemy.destroy()
                     self.kill()
-                    self.impact_sound.play()
-                    
-                
+                    self.impact_sound.play()           
 
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, groups, frames, collision_sprites, pos, player, speed):
+    def __init__(self, groups, frames, collision_sprites, pos, player, speed, damage):
         super().__init__(groups)
         self.image = frames[0]
         self.rect = self.image.get_frect(center = pos)
         self.hitbox_rect = self.rect.inflate(-60, -40)
+
+        self.damage = damage
 
         # movement
         self.direction = pygame.Vector2()
@@ -138,14 +138,13 @@ class Enemy(pygame.sprite.Sprite):
         self.direction = (player_position - position).normalize()
 
         self.hitbox_rect.x += self.direction.x * self.speed * delta_time
-        self.collision(True)
+        self.check_collision(True)
         self.hitbox_rect.y += self.direction.y * self.speed * delta_time
-        self.collision(False)
+        self.check_collision(False)
 
         self.rect.center = self.hitbox_rect.center
 
-
-    def collision(self, moving_horizontally):
+    def check_collision(self, moving_horizontally):
         for sprite in self.collision_sprites:
             if sprite.rect.colliderect(self.hitbox_rect):
                 if moving_horizontally:
@@ -172,12 +171,12 @@ class Enemy(pygame.sprite.Sprite):
 
 class Bat(Enemy):
     def __init__(self, groups, surfaces, collision_sprites, pos, player):
-        super().__init__(groups, surfaces, collision_sprites, pos, player, 350)
+        super().__init__(groups, surfaces, collision_sprites, pos, player, 350, 10)
 
 class Blob(Enemy):
     def __init__(self, groups, surfaces, collision_sprites, pos, player):
-        super().__init__(groups, surfaces, collision_sprites, pos, player, 200)
+        super().__init__(groups, surfaces, collision_sprites, pos, player, 200, 25)
 
 class Skeleton(Enemy):
     def __init__(self, groups, surfaces, collision_sprites, pos, player):
-        super().__init__(groups, surfaces, collision_sprites, pos, player, 300)
+        super().__init__(groups, surfaces, collision_sprites, pos, player, 300, 20)

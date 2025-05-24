@@ -2,7 +2,7 @@ from pytmx.util_pygame import load_pygame
 from random import randint, choice
 
 from settings import *
-from player import Player
+from player import Player, HealthDisplay
 from sprites import *
 from groups import AllSprites
 
@@ -47,7 +47,6 @@ class Game():
                         frames.append(pygame.image.load(full_path).convert_alpha())
             self.enemy_frames[enemy_type] = frames
                         
-
     def setup(self):
         map = load_pygame(join("data", "maps", "world.tmx"))
 
@@ -62,7 +61,8 @@ class Game():
 
         for marker in map.get_layer_by_name("Entities"):
             if marker.name == "Player":
-                self.player = Player(self.all_sprites, self.collision_sprites, (marker.x, marker.y))
+                self.player = Player(self.all_sprites, self.collision_sprites, self.enemy_sprites, (marker.x, marker.y))
+                self.health_display = HealthDisplay(self.all_sprites, self.player)
                 self.gun = Gun(self.all_sprites, self.player)
             elif marker.name == "Enemy":
                 self.enemy_spawn_positions.append((marker.x, marker.y))
@@ -106,7 +106,7 @@ class Game():
             Skeleton((self.all_sprites, self.enemy_sprites), self.enemy_frames[random_enemy_type], self.collision_sprites, random_enemy_spawn_position, self.player)
 
     def check_for_gameover(self):
-        if pygame.sprite.spritecollide(self.player, self.enemy_sprites, False, pygame.sprite.collide_mask):
+        if self.player.health_points == 0:
             self.running = False
 
 if __name__ == "__main__":
