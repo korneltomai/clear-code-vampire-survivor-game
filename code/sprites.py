@@ -173,6 +173,9 @@ class Bat(Enemy):
     def __init__(self, groups, surfaces, collision_sprites, pos, player):
         super().__init__(groups, surfaces, collision_sprites, pos, player, 350, 10)
 
+    def check_collision(self, _):
+        pass
+
 class Blob(Enemy):
     def __init__(self, groups, surfaces, collision_sprites, pos, player):
         super().__init__(groups, surfaces, collision_sprites, pos, player, 200, 25)
