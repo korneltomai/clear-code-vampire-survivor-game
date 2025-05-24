@@ -5,6 +5,7 @@ from settings import *
 from player import Player, HealthDisplay
 from sprites import *
 from groups import AllSprites
+from monsters import *
 
 class Game():
     def __init__(self):
